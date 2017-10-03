@@ -1,5 +1,6 @@
 import argparse
 import re
+import bisect
 
 special_chars = {
     'image_id': 'i',
@@ -61,6 +62,18 @@ parser.add_argument('--top', help='Path to the top level of the dataset.\
                     Default: current path.', type=str)
 args = parser.parse_args()
 
+def get_ids(id_char, top_dir, general_path):
+    pos = get_special_chars_positions(general_path)
+    char_pos = pos[id_char]
+    if len(char_pos) == 0 return None
+    lev_pos = sorted(pos[special_chars['deeper_level']])
+    char_lev = bisect.bisect_left(lev_pos, char_pos[0])
+    # Dig through all dir levels recursively
+
+def get_identities(top_dir, general_path):
+    # Step through all the levels in the given path
+    # Within each level, store all the necessary info about camera-id, image-id, person-id
+    identities = {} # dict with person_id as key, 
 
 
 # Iterate through all camera-id's
