@@ -9,7 +9,7 @@ special_chars = {
     'person_id': 'p',
     'deeper_level': '/',
     'escape': '\\',
-    'dont_care': '_'
+    'dont_care': '*'
 }
 
 # Get the positions of all the special characters
