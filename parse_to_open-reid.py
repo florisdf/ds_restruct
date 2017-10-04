@@ -46,6 +46,12 @@ def generic_path(string):
             'Two successive "{}" characters are not allowed.'
         .format(special_chars['deeper_level']))
 
+    # The generic path cannot start with a deeper-level character
+    if min(pos) is 0:
+        raise argparse.ArgumentTypeError(
+            'It is not allowed to start the input format with a "{}".'
+            .format(special_chars['deeper_level']))
+
     return string
 
 # Check if the string is a directory
