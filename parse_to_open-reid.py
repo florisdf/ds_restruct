@@ -19,21 +19,21 @@ def get_special_chars_positions(string):
 
 # Check if the string has the correct format and that all paths are reachable
 def generic_path(string):
-    char_positions = get_special_chars_positions(string)
+    chars_positions = get_special_chars_positions(string)
     # The generic path must contain a reference to the image-id ("i")
-    if len(char_positions[special_chars['image_id']]) is 0:
+    if len(chars_positions[special_chars['image_id']]) is 0:
         raise argparse.ArgumentTypeError(
             'There is no reference to the image-id ("{}")'
             .format(special_chars['image_id']))
 
     # The path cannot contain more than one image-id, person-id or camera-id
-    if len(char_positions[special_chars['image_id']]) > 1:
+    if len(chars_positions[special_chars['image_id']]) > 1:
         raise argparse.ArgumentTypeError(
             'Only one image_id reference can be given.')
-    if len(char_positions[special_chars['camera_id']]) > 1:
+    if len(chars_positions[special_chars['camera_id']]) > 1:
         raise argparse.ArgumentTypeError(
             'Only one camera_id reference can be given.')
-    if len(char_positions[special_chars['person_id']]) > 1:
+    if len(chars_positions[special_chars['person_id']]) > 1:
         raise argparse.ArgumentTypeError(
             'Only one person_id reference can be given.')
 
@@ -47,7 +47,7 @@ def generic_path(string):
         .format(special_chars['slash']))
 
     # The generic path cannot start with a deeper-level character
-    if min(pos) is 0:
+    if min(chars_positions) is 0:
         raise argparse.ArgumentTypeError(
             'It is not allowed to start the input format with a "{}".'
             .format(special_chars['slash']))
