@@ -1,6 +1,7 @@
 import argparse
 import re
 import bisect
+import os
 
 special_chars = {
     'image_id': 'i',
@@ -47,6 +48,12 @@ def generic_path(string):
 
     return string
 
+# Check if the string is a directory
+def path(string):
+    if not os.path.isdir(string):
+        raise argparse.ArgumentTypeError(
+            '"{}" is not a directory'
+            .format(string))
 
 parser = argparse.ArgumentParser(
     description="Transform a dataset into the open-reid format")
