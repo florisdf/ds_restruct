@@ -37,16 +37,17 @@ def generic_path(string):
         raise argparse.ArgumentTypeError(
             'Only one person_id reference can be given.')
 
-    # Two deeper-level characters after each other are not allowed
-    chars_positions = char_positions[special_chars['slash']]
-    sorted_pos, size = sorted(chars_positions), len(pos)
-    if min([sorted_pos[i + 1] - sorted_pos[i]
-            for i in range(size) if i + 1 < size]) == 1:
-        raise argparse.ArgumentTypeError(
-            'Two successive "{}" characters are not allowed.'
-        .format(special_chars['slash']))
+    # Two special characters after each other are not allowed
+    for special_char in special_chars.items():
+        chars_positions = char_positions[special_char]
+        sorted_pos, size = sorted(chars_positions), len(pos)
+        if min([sorted_pos[i + 1] - sorted_pos[i]
+                for i in range(size) if i + 1 < size]) == 1:
+            raise argparse.ArgumentTypeError(
+                'Two successive "{}" characters are not allowed.'
+            .format(special_char))
 
-    # The generic path cannot start with a deeper-level character
+    # The generic path cannot start with a slash character
     if min(chars_positions) is 0:
         raise argparse.ArgumentTypeError(
             'It is not allowed to start the input format with a "{}".'
