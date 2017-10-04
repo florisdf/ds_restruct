@@ -102,6 +102,30 @@ parser.add_argument('--top', help='Path to the top level of the dataset.\
                     Default: current path.', type=path)
 args = parser.parse_args()
 
+# Get all files in a directory that match a single generic_path_component
+def get_files_matching_comp(generic_path_component, directory):
+    assert os.path.isdir(directory)
+
+    # Extract regex from generic_path_component 
+    all_positions = get_iform_placeholders_positions(generic_path_component)
+    assert(len(all_positions(SLASH)) == 0) # Cannot contain extra subdirs
+
+    # Iterate through chars and build regex
+    reg = ""
+    escaped = False
+    for c in generic_path_component:
+        if escaped:
+            reg += re.escape(c)
+            escaped = False
+        elif c == ESCAPE:
+            escaped = True
+        elif c in iform_placeholders.items():
+            reg += ".*"
+        else:
+            reg += re.escape(c)
+
+    return [d for d in os.listdir(directory) if re.search(reg, d)]
+
 # Get all the placeholder values corresponding to the given placeholder
 def get_id_placeholder_values(id_placeholder, top_dir, generic_path):
     all_positions = get_iform_placeholders_positions(generic_path)
