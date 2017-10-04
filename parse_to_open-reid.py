@@ -84,10 +84,15 @@ def get_id_values(id_char, top_dir, general_path):
 
     if len(slash_positions) is 0 or
     bisect.bisect_left(slash_positions, id_positions[0]) == 0:
-        # The id will be found in this directory
+        # The id will be found in this directory. Use all files
+        # that match the part before the first slash (if there are
+        # any slashes left).
         return None
     else:
-        # Recursive call
+        # Call to get_id_values using as a new top_dir each directory
+        # in top_dir that matches the part before the first slash in 
+        # general_path. Remove the part until the first slash from
+        # general_path and use it as new general_path.
         return None
 
 
