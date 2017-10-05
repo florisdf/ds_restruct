@@ -62,14 +62,7 @@ args = parser.parse_args()
 
 
 def get_identities(top_dir, generic_path):
-    # Step through all the levels in the given path
-    # Within each level, store all the necessary info about camera-id, image-id, person-id
-    identities = {} # dict with person_id as key, 
+    ids = {id_placeholder: [get_id_placeholder_values(id_placeholder, top_dir, generic_path)] for id_placeholder in [PERSON_ID, CAMERA_ID, IMAGE_ID]}
+    print(ids)
 
-
-# Iterate through all camera-id's
-
-# Iterate through all person-id's
-
-# Iterate through all image-id's
-
+get_identities(args.top, args.ifor)
