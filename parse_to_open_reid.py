@@ -1,50 +1,6 @@
 #!/usr/bin/env python
 import argparse
-import re
-import bisect
-import os
-import itertools
-
-# For debugging vvv
-import inspect
-def lineno():
-    return inspect.currentframe().f_back.f_lineno
-# For debugging ^^^
-
-IMAGE_ID = 'i'
-CAMERA_ID = 'c'
-PERSON_ID = 'p'
-SLASH = '/'
-ESCAPE = '\\'
-DONT_CARE = '*'
-
-iform_placeholders = {
-    'image_id': IMAGE_ID,
-    'camera_id': CAMERA_ID,
-    'person_id': PERSON_ID,
-    'slash': SLASH,
-    'escape': ESCAPE,
-    'dont_care': DONT_CARE
-}
-
-# Get the positions of all the placeholders
-def get_iform_placeholders_positions(string):
-    return {placeholder: [m.start() for m in re.finditer(re.escape(placeholder), string)]
-            for _, placeholder in iform_placeholders.items()}
-
-# Check if two placeholders occur successively in generic_path
-def are_placeholders_successive(placeholder1, placeholder2, generic_path):
-    all_positions = get_iform_placeholders_positions(generic_path)
-    placeholder1_positions = sorted(all_positions[placeholder1])
-    placeholder2_positions = sorted(all_positions[placeholder2])
-    if (len(placeholder1_positions) == 0 or len(placeholder2_positions) == 0):
-        return False
-
-    if min([abs(pos1 - pos2)
-            for pos1 in placeholder1_positions
-            for pos2 in placeholder2_positions]) == 1:
-        return True
-    return False
+from placeholder import *
 
 # Check if the string has the correct format
 def generic_path(string):
