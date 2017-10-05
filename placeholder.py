@@ -27,13 +27,21 @@ iform_placeholders = {
 
 # Get the positions of all the placeholders
 def get_iform_placeholders_positions(string):
-    return { placeholder:
-            [
-                m.start() for m in
-                re.finditer(r'([^\\]|^)' + re.escape(placeholder), string)
-            ]
-            for _, placeholder in iform_placeholders.items()
-           }
+    positions = {c: [] for c in iform_placeholders.values()}
+    escaped = False
+    counter = 0
+
+    for c in string:
+        if escaped:
+            escaped = False
+        elif c is ESCAPE:
+            escaped = True
+            positions[ESCAPE].append(counter)
+        elif c in iform_placeholders.values():
+            positions[c].append(counter)
+        counter += 1
+
+    return positions
 
 # Check if two placeholders occur successively in generic_path
 def are_placeholders_successive(placeholder1, placeholder2, generic_path):
