@@ -27,7 +27,7 @@ iform_placeholders = {
 
 # Get the positions of all the placeholders
 def get_iform_placeholders_positions(string):
-    return {placeholder:
+    return { placeholder:
             [
                 m.start() for m in
                 re.finditer(r'([^\\]|^)' + re.escape(placeholder), string)
