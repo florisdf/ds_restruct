@@ -2,6 +2,7 @@ import re
 import bisect
 import os
 import itertools
+import copy
 
 # For debugging vvv
 import inspect
@@ -16,6 +17,7 @@ SLASH = '/'
 ESCAPE = '\\'
 DONT_CARE = '*'
 
+id_placeholders = [IMAGE_ID, CAMERA_ID, PERSON_ID]
 iform_placeholders = {
     'image_id': IMAGE_ID,
     'camera_id': CAMERA_ID,
@@ -59,60 +61,69 @@ def are_placeholders_successive(placeholder1, placeholder2, generic_path):
         return True
     return False
 
-# Get all files in a directory that match a single generic_path_component
-def get_files_matching_comp(generic_path_component, directory):
+# Get all files in a single directory that match a generic_path_part
+def get_id_dicts_for_gpath_part(generic_path_part, directory):
     assert os.path.isdir(directory)
 
-    # Extract regex from generic_path_component 
-    all_positions = get_iform_placeholders_positions(generic_path_component)
+    # Extract regex from generic_path_part 
+    all_positions = get_iform_placeholders_positions(generic_path_part)
     assert(len(all_positions[SLASH]) == 0) # Cannot contain extra subdirs
 
     # Iterate through chars and build regex
     reg = ""
     escaped = False
-    for c in generic_path_component:
+    for (index, c) in enumerate(list(generic_path_part)):
         if escaped:
             reg += re.escape(c)
             escaped = False
         elif c == ESCAPE:
             escaped = True
-        elif c in iform_placeholders.values():
+        elif c in id_placeholders:
+            # Create a named group for id-placeholders, so we can refer to them
+            # ! Group names must be valid Python identifiers
+            reg += "(?P<{}>.*)".format(c)
+        elif c == DONT_CARE:
             reg += ".*"
         else:
             reg += re.escape(c)
-    print("This is the regex: " + reg)
-    return [d for d in os.listdir(directory) if re.search(reg, d)]
 
-# Get all the placeholder values corresponding to the given placeholder
-def get_id_placeholder_values(id_placeholder, top_dir, generic_path):
+    # Match the files in this dir and parse id's
+    id_dicts = []
+    for d in os.listdir(directory):
+        m = re.match(reg, d)
+        if not m: continue
+        id_dict = {id_ph: m.group(id_ph) for id_ph in id_placeholders
+                    if id_ph in m.groupdict().keys()}
+        id_dict["path"] = os.path.join(directory, d)
+        id_dicts.append(id_dict)
+    return id_dicts
+
+# Get a list of id-dicts
+def get_id_dicts_for_gpath(id_dict, current_dir, generic_path):
     all_positions = get_iform_placeholders_positions(generic_path)
-    id_positions = all_positions[id_placeholder]
-    print(lineno())
-    print(all_positions)
-    assert len(id_positions) == 1
     slash_positions = sorted(all_positions[SLASH])
 
     if len(slash_positions) == 0:
-        # There are no slashes in generic_path.
-        # Scan through top_dir for matching filenames
-        # and extract the id from it
-        print(lineno())
-        return get_files_matching_comp(generic_path, top_dir)
-    elif bisect.bisect_left(slash_positions, id_positions[0]) == 0:
-        # The id will be found in this directory. Use all files
-        # that match the part before the first slash in generic_path.
-        print("gp: {} top: {} id: {}".format(generic_path, top_dir, id_placeholder))
-        new_gp = generic_path[:slash_positions[0]]
-        print("newgp: {} top: {}".format(new_gp, top_dir))
-        return get_files_matching_comp(new_gp, top_dir)
+        # There are no deeper folders, we reached the bottom.
+        # List all files matching gpath and parse them into id-dicts.
+        id_dicts = []
+        for i in get_id_dicts_for_gpath_part(generic_path, current_dir):
+            new_id_dict = copy.deepcopy(id_dict)
+            new_id_dict.update(i)
+            id_dicts.append(new_id_dict)
+        return id_dicts
     else:
-        # Recursive call to get_id_placeholder_values using as a new top_dir
-        # each directory in top_dir that matches the part before the 
-        # first slash in generic_path. Remove the part until the first
-        # slash from generic_path and use it as new generic_path.
-        print(lineno())
-        new_gp = generic_path[slash_positions[0] : slash_positions[1]]
-        return [item for sublist in
-                get_id_placeholder_values(id_placeholder, new_td, new_gp)
-                for new_td in get_files_matching_comp(gen_p, top_d)
-                for item in sublist]
+        # There are still deeper folders to explore!
+        # List all files matching the first part of gpath.
+        # Use these files for a recursive call.
+        first_path_part = generic_path[:slash_positions[0]]
+        assert(slash_positions[0] + 1 < len(generic_path))
+        last_path_part = generic_path[slash_positions[0] + 1:]
+
+        id_dicts = []
+        for i in get_id_dicts_for_gpath_part(first_path_part, current_dir):
+            new_id_dict = copy.deepcopy(id_dict)
+            new_id_dict.update(i)
+            id_dicts.extend(get_id_dicts_for_gpath(
+                new_id_dict, new_id_dict['path'], last_path_part))
+        return id_dicts

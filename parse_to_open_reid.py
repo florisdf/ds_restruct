@@ -61,8 +61,4 @@ parser.add_argument('--top', help='Path to the top level of the dataset.\
 args = parser.parse_args()
 
 
-def get_identities(top_dir, generic_path):
-    ids = {id_placeholder: [get_id_placeholder_values(id_placeholder, top_dir, generic_path)] for id_placeholder in [PERSON_ID, CAMERA_ID, IMAGE_ID]}
-    print(ids)
-
-get_identities(args.top, args.ifor)
+print(get_id_dicts_for_gpath({}, args.top, args.ifor))
