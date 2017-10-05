@@ -67,7 +67,7 @@ def get_files_matching_comp(generic_path_component, directory):
             escaped = False
         elif c == ESCAPE:
             escaped = True
-        elif c in iform_placeholders.items():
+        elif c in iform_placeholders.values():
             reg += ".*"
         else:
             reg += re.escape(c)
