@@ -44,6 +44,7 @@ def path(string):
         raise argparse.ArgumentTypeError(
             '"{}" is not a directory'
             .format(string))
+    return string
 
 parser = argparse.ArgumentParser(
     description="Transform a dataset into the open-reid format")
