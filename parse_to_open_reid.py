@@ -57,55 +57,8 @@ parser.add_argument('--ifor', help='The input format.\
                     required=True, type=generic_path)
 
 parser.add_argument('--top', help='Path to the top level of the dataset.\
-                    Default: current path.', type=path)
+                    Default: current path.', type=path, default='.')
 args = parser.parse_args()
-
-# Get all files in a directory that match a single generic_path_component
-def get_files_matching_comp(generic_path_component, directory):
-    assert os.path.isdir(directory)
-
-    # Extract regex from generic_path_component 
-    all_positions = get_iform_placeholders_positions(generic_path_component)
-    assert(len(all_positions(SLASH)) == 0) # Cannot contain extra subdirs
-
-    # Iterate through chars and build regex
-    reg = ""
-    escaped = False
-    for c in generic_path_component:
-        if escaped:
-            reg += re.escape(c)
-            escaped = False
-        elif c == ESCAPE:
-            escaped = True
-        elif c in iform_placeholders.items():
-            reg += ".*"
-        else:
-            reg += re.escape(c)
-
-    return [d for d in os.listdir(directory) if re.search(reg, d)]
-
-# Get all the placeholder values corresponding to the given placeholder
-def get_id_placeholder_values(id_placeholder, top_dir, generic_path):
-    all_positions = get_iform_placeholders_positions(generic_path)
-    id_positions = all_positions[id_placeholder]
-    assert len(id_positions) != 0
-    slash_positions = sorted(all_positions[SLASH])
-
-    if len(slash_positions) == 0 or bisect.bisect_left(slash_positions, id_positions[0]) == 0:
-        # The id will be found in this directory. Use all files
-        # that match the part before the first slash (if there are
-        # any slashes) in generic_path.
-        if len(slash_positions) == 0:
-            # There are no slashes in generic_path
-            # Scan through top_dir for matching filenames
-            # and extract the id from it
-            return None
-    else:
-        # Call to get_id_placeholder_values using as a new top_dir each directory
-        # in top_dir that matches the part before the first slash in 
-        # generic_path. Remove the part until the first slash from
-        # generic_path and use it as new generic_path.
-        return None
 
 
 def get_identities(top_dir, generic_path):
