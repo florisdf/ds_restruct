@@ -45,6 +45,8 @@ def get_iform_placeholders_positions(string):
 
 # Check if two placeholders occur successively in generic_path
 def are_placeholders_successive(placeholder1, placeholder2, generic_path):
+    assert(placeholder1 in iform_placeholders.values())
+    assert(placeholder2 in iform_placeholders.values())
     all_positions = get_iform_placeholders_positions(generic_path)
     placeholder1_positions = sorted(all_positions[placeholder1])
     placeholder2_positions = sorted(all_positions[placeholder2])
@@ -59,7 +61,6 @@ def are_placeholders_successive(placeholder1, placeholder2, generic_path):
 
 # Get all files in a directory that match a single generic_path_component
 def get_files_matching_comp(generic_path_component, directory):
-    import pdb; pdb.set_trace()
     assert os.path.isdir(directory)
 
     # Extract regex from generic_path_component 
