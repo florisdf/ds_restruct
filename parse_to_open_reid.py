@@ -61,7 +61,7 @@ def generic_path(string):
     for placeholder in unique_ids:
         if len(all_positions[placeholder]) > 1:
             raise argparse.ArgumentTypeError(
-            '"{}" must be unique in the input format.')
+            '"{}" must be unique in the input format.'.format(placeholder))
 
     # Two placeholders or an placeholder and a don't care
     # after each other are not allowed ("forbidden twins")
