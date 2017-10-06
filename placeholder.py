@@ -28,7 +28,7 @@ gpath_placeholders = {
 }
 
 # Get the positions of all the placeholders
-def get_iform_placeholders_positions(string):
+def get_gpath_placeholders_positions(string):
     positions = {c: [] for c in gpath_placeholders.values()}
     escaped = False
     counter = 0
@@ -49,7 +49,7 @@ def get_iform_placeholders_positions(string):
 def are_placeholders_successive(placeholder1, placeholder2, generic_path):
     assert(placeholder1 in gpath_placeholders.values())
     assert(placeholder2 in gpath_placeholders.values())
-    all_positions = get_iform_placeholders_positions(generic_path)
+    all_positions = get_gpath_placeholders_positions(generic_path)
     placeholder1_positions = sorted(all_positions[placeholder1])
     placeholder2_positions = sorted(all_positions[placeholder2])
     if (len(placeholder1_positions) == 0 or len(placeholder2_positions) == 0):
@@ -63,10 +63,8 @@ def are_placeholders_successive(placeholder1, placeholder2, generic_path):
 
 # Get all files in a single directory that match a generic_path_part
 def get_id_dicts_for_gpath_part(generic_path_part, directory):
-    assert os.path.isdir(directory)
-
     # Extract regex from generic_path_part 
-    all_positions = get_iform_placeholders_positions(generic_path_part)
+    all_positions = get_gpath_placeholders_positions(generic_path_part)
     assert(len(all_positions[SLASH]) == 0) # Cannot contain extra subdirs
 
     # Iterate through chars and build regex
@@ -99,8 +97,8 @@ def get_id_dicts_for_gpath_part(generic_path_part, directory):
     return id_dicts
 
 # Get a list of id-dicts
-def get_id_dicts_for_gpath(current_dir, generic_path, id_dict={}):
-    all_positions = get_iform_placeholders_positions(generic_path)
+def get_id_dicts_for_gpath(generic_path, current_dir, id_dict={}):
+    all_positions = get_gpath_placeholders_positions(generic_path)
     slash_positions = sorted(all_positions[SLASH])
 
     if len(slash_positions) == 0:
@@ -127,3 +125,35 @@ def get_id_dicts_for_gpath(current_dir, generic_path, id_dict={}):
             id_dicts.extend(get_id_dicts_for_gpath(
                 last_path_part, new_id_dict['path'], id_dict=new_id_dict))
         return id_dicts
+
+# Using a list of id-dicts, generate code to copy them into a format defined by a generic_path
+def generate_cp_commands(i_gpath, i_dir, o_gpath, o_dir):
+    id_dicts = get_id_dicts_for_gpath(i_gpath, i_dir)
+    output_positions = get_gpath_placeholders_positions(o_gpath)
+    commands = []
+    newly_created_dirs= []
+    for id_dict in id_dicts:
+        # Parse ids into o_gpath
+        escaped = False
+        o_file = ""
+        for c in o_gpath:
+            if escaped:
+                o_file += c
+                escaped = False
+            elif c == ESCAPE:
+                escaped = True
+            elif c in id_placeholders:
+                if c in id_dict.keys(): o_file += id_dict[c]
+            else:
+                o_file += c
+        # Join o_file and o_dir
+        o_full_path = os.path.join(o_dir, o_file)
+        # Create cp command that copies original -> destination
+        dirname = os.path.dirname(o_full_path)
+        cmd = ''
+        if not dirname in newly_created_dirs:
+            cmd += 'mkdir -p {} && '.format(dirname)
+            newly_created_dirs.append(dirname)
+        cmd += 'cp {} {}'.format(id_dict['path'], o_full_path)
+        commands.append(cmd)
+    return commands
