@@ -18,7 +18,7 @@ ESCAPE = '\\'
 DONT_CARE = '*'
 
 id_placeholders = [IMAGE_ID, CAMERA_ID, PERSON_ID]
-iform_placeholders = {
+gpath_placeholders = {
     'image_id': IMAGE_ID,
     'camera_id': CAMERA_ID,
     'person_id': PERSON_ID,
@@ -29,7 +29,7 @@ iform_placeholders = {
 
 # Get the positions of all the placeholders
 def get_iform_placeholders_positions(string):
-    positions = {c: [] for c in iform_placeholders.values()}
+    positions = {c: [] for c in gpath_placeholders.values()}
     escaped = False
     counter = 0
 
@@ -39,7 +39,7 @@ def get_iform_placeholders_positions(string):
         elif c is ESCAPE:
             escaped = True
             positions[ESCAPE].append(counter)
-        elif c in iform_placeholders.values():
+        elif c in gpath_placeholders.values():
             positions[c].append(counter)
         counter += 1
 
@@ -47,8 +47,8 @@ def get_iform_placeholders_positions(string):
 
 # Check if two placeholders occur successively in generic_path
 def are_placeholders_successive(placeholder1, placeholder2, generic_path):
-    assert(placeholder1 in iform_placeholders.values())
-    assert(placeholder2 in iform_placeholders.values())
+    assert(placeholder1 in gpath_placeholders.values())
+    assert(placeholder2 in gpath_placeholders.values())
     all_positions = get_iform_placeholders_positions(generic_path)
     placeholder1_positions = sorted(all_positions[placeholder1])
     placeholder2_positions = sorted(all_positions[placeholder2])
