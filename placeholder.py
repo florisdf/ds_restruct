@@ -99,7 +99,7 @@ def get_id_dicts_for_gpath_part(generic_path_part, directory):
     return id_dicts
 
 # Get a list of id-dicts
-def get_id_dicts_for_gpath(id_dict, current_dir, generic_path):
+def get_id_dicts_for_gpath(current_dir, generic_path, id_dict={}):
     all_positions = get_iform_placeholders_positions(generic_path)
     slash_positions = sorted(all_positions[SLASH])
 
@@ -125,5 +125,5 @@ def get_id_dicts_for_gpath(id_dict, current_dir, generic_path):
             new_id_dict = copy.deepcopy(id_dict)
             new_id_dict.update(i)
             id_dicts.extend(get_id_dicts_for_gpath(
-                new_id_dict, new_id_dict['path'], last_path_part))
+                last_path_part, new_id_dict['path'], id_dict=new_id_dict))
         return id_dicts
