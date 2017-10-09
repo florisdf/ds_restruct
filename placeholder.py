@@ -17,6 +17,7 @@ SLASH = '/'
 ESCAPE = '\\'
 DONT_CARE = '*'
 
+reassign_regex = "(([0-9]+)([p|c|i]))*"
 id_placeholders = [IMAGE_ID, CAMERA_ID, PERSON_ID]
 gpath_placeholders = {
     'image_id': IMAGE_ID,
@@ -126,9 +127,70 @@ def get_id_dicts_for_gpath(generic_path, current_dir, id_dict={}):
                 last_path_part, new_id_dict['path'], id_dict=new_id_dict))
         return id_dicts
 
+# Create a dict that contains the width for each id_placeholder
+def get_reassign_list(reass_str):
+    reass_list = []
+    for id_ph in id_placeholders:
+        m = re.search('([0-9]+)({})'.format(id_ph), reass_str)
+        if m: reass_list.append((id_ph, "{{:0{}d}}".format(m.group(1))))
+    return reass_list
+
+def get_hierarchy_dict(hierarchy, flat_dicts):
+    assert(len(hierarchy) > 0)
+    id_ph = hierarchy[0]
+    if len(hierarchy) == 1:
+        return [flat_dict[id_ph] for flat_dict in flat_dicts]
+    all_id_values = list({flat_dict[id_ph]
+                         for flat_dict in flat_dicts
+                         if id_ph in flat_dict.keys()})
+    all_id_value_dicts = {id_value:
+                          [id_value_dict for id_value_dict in flat_dicts
+                          if id_value_dict[id_ph] is id_value]
+                         for id_value in all_id_values}
+    return {id_value:
+            get_hierarchy_dict(
+                hierarchy[1:],
+                all_id_value_dicts[id_value])
+            for id_value in all_id_values}
+
+# Turn the id values in id_dicts into indexed values.
+def index_id_dicts(hierarchy, id_dicts, hierarchy_dict=None):
+    assert(len(hierarchy) > 0)
+    if not hierarchy_dict:
+        hierarchy_dict = get_hierarchy_dict(hierarchy, id_dicts)
+    id_ph = hierarchy[0]
+    # Get a list of all the id values of the first id placeholder in hierarchy
+    id_values = list(hierarchy_dict)
+    for id_val in id_values:
+        # Get all the id_dicts that have this id_val
+        selected_dicts = [id_dict for id_dict in id_dicts
+                          if id_ph in id_dict.keys()
+                          and id_dict[id_ph] is id_val]
+        for id_dict in selected_dicts:
+            id_dict[id_ph] = id_values.index(id_val)
+        if len(hierarchy) > 1:
+            index_id_dicts(hierarchy[1:],
+                           selected_dicts,
+                           hierarchy_dict[id_val])
+    return id_dicts
+
+def reassign_ids(id_dicts, reass_str):
+    reass_list = get_reassign_list(reass_str)
+    reass_dict = {id_ph: id_val for (id_ph, id_val) in reass_list}
+    #hierarchy = str([c for c, _ in reass_list])
+    hierarchy = 'pci' # TODO parse hierarchy from reass_str
+    index_id_dicts(hierarchy, id_dicts)
+    for id_ph in id_placeholders:
+        for id_dict in id_dicts:
+            if not id_ph in id_dict.keys(): continue
+            id_dict[id_ph] = reass_dict[id_ph].format(int(id_dict[id_ph]))
+    return id_dicts
+
+
 # Using a list of id-dicts, generate code to copy them into a format defined by a generic_path
-def generate_cp_commands(i_gpath, i_dir, o_gpath, o_dir):
+def generate_cp_commands(i_gpath, i_dir, o_gpath, o_dir, reassign_str):
     id_dicts = get_id_dicts_for_gpath(i_gpath, i_dir)
+    id_dicts = reassign_ids(id_dicts, reassign_str)
     output_positions = get_gpath_placeholders_positions(o_gpath)
     commands = []
     newly_created_dirs= []

@@ -36,6 +36,14 @@ def generic_path(string):
             'It is not allowed to start the input format with a slash.')
     return string
 
+# Check if the string is a correct "reassign" argument
+def reassign(string):
+    if not re.match(reassign_regex, string):
+        raise argparse.ArgumentTypeError(
+            '"{}" is not a correct reassign argument'
+            .format(string))
+    return string
+
 # Check if the string is a directory
 def path(string):
     if not os.path.isdir(string):
@@ -60,7 +68,9 @@ parser.add_argument('--itop', help='Path to the top level of the input dataset.\
 parser.add_argument('--ofor', help='The output format.', required=True, type=generic_path)
 
 parser.add_argument('--otop', help='Path to the top level of the output', default='.')
-args = parser.parse_args()
 
-for cmd in generate_cp_commands(args.ifor, args.itop, args.ofor, args.otop):
+parser.add_argument('-r', '--reassign', help='Reassign how one or more id types will be represented in the output format. Should match regex: "{}". E.g. "2dc1wi3dp" could give a file with a name like "012-04-f.jpg" where the person id is "012", the camera id is "04" and the image id is "f".)'.format(reassign_regex), type=reassign)
+
+args = parser.parse_args()
+for cmd in generate_cp_commands(args.ifor, args.itop, args.ofor, args.otop, args.reassign):
     print(cmd)
