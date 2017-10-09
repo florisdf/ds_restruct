@@ -30,6 +30,7 @@ class TestPlaceholder(unittest.TestCase):
         files = get_id_dicts_for_gpath_part(gpath, '.')
         self.assertEqual(3, len(files))
 
+    # TODO implement a working test (this one is not working)
     @mock.patch('placeholder.os.path.isdir')
     def test_get_id_dicts(self, mock_isdir):
         mock_isdir.return_value = True
